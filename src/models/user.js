@@ -45,9 +45,15 @@ const userSchema = new mongoose.Schema ( {
 
 userSchema.pre ("save" , async function ()  {
        const user = this  
-       if (user.isModified('password')) {
-        user.password = await bcryptjs.hash(user.password, 10)
-       }
+       if (!user.isModified('password') || !user.password) {
+        return next();
+      }
+    
+      const isNewPassword = user.isNew || (user._update && user._update.password && user.password !== user._update.password);
+    
+      if (isNewPassword) {
+        user.password = await bcryptjs.hash(user.password, 10);
+      }
 })
 
 userSchema.statics.findByCredentials = async (em,pass) =>{
